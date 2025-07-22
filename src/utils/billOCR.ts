@@ -228,7 +228,7 @@ export const extractTextFromImage = async (file: File): Promise<string> => {
     
     console.log('Processing image file with enhanced OCR...');
     
-    // Enhanced OCR with multiple language support and better settings
+    // Enhanced OCR with improved settings (English language)
     const result = await Tesseract.recognize(file, 'eng', {
       logger: m => {
         if (m.status === 'recognizing text') {

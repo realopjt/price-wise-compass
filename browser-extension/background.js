@@ -1,6 +1,8 @@
 // Background service worker for PriceWise Smart Shopping Assistant
 // Cross-browser compatibility layer
-const browser = chrome || browser;
+const browser = typeof chrome !== 'undefined' ? chrome :
+                typeof browser !== 'undefined' ? browser :
+                undefined;
 
 // Extension lifecycle management
 browser.runtime.onInstalled.addListener((details) => {

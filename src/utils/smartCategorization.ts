@@ -45,7 +45,7 @@ const CATEGORY_RULES: Record<string, CategoryRule> = {
   
   'Office Supplies': {
     keywords: [
-      'office', 'supplies', 'stationary', 'paper', 'printer', 'toner', 'ink',
+      'office', 'supplies', 'stationery', 'paper', 'printer', 'toner', 'ink',
       'staples', 'office depot', 'best buy', 'amazon business', 'costco business',
       'furniture', 'desk', 'chair', 'equipment', 'electronics'
     ],
