@@ -90,6 +90,9 @@ export function ReceiptScanner({ userId, onScanSuccess }: ReceiptScannerProps) {
     // Reset any previous camera errors when attempting to start the camera again
     setShowCameraError(false);
     setCameraErrorMessage('');
+    
+    // Clear any previous error states
+    setScanning(false);
     try {
       // Check if camera is supported
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
@@ -240,6 +243,12 @@ export function ReceiptScanner({ userId, onScanSuccess }: ReceiptScannerProps) {
       
       let errorMessage = "Unable to access camera. Please use file upload instead.";
       let errorTitle = "Camera Error";
+      
+      // Ensure error state is properly displayed with red styling
+      setTimeout(() => {
+        setShowCameraError(true);
+        setCameraErrorMessage(errorMessage);
+      }, 100);
       
       if (error.name === 'NotAllowedError') {
         errorTitle = "Permission Denied";

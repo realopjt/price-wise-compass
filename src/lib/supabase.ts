@@ -1,9 +1,15 @@
 import { createClient } from '@supabase/supabase-js'
 
-const supabaseUrl = 'https://your-project.supabase.co'
-const supabaseKey = 'your-anon-key'
+const supabaseUrl = 'https://gwgnygxddaxpfkmlyrqd.supabase.co'
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd3Z255Z3hkZGF4cGZrbWx5cnFkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI5MTQ4OTgsImV4cCI6MjA2ODQ5MDg5OH0.2PuRCYlFYqW1nkRBjnEJrmda8DYvt9UL1Y1cdYzYX1k'
 
-export const supabase = createClient(supabaseUrl, supabaseKey)
+export const supabase = createClient(supabaseUrl, supabaseKey, {
+  auth: {
+    storage: localStorage,
+    persistSession: true,
+    autoRefreshToken: true,
+  }
+})
 
 export type Database = {
   public: {

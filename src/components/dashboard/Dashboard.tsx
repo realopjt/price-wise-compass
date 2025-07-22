@@ -40,6 +40,7 @@ import { LocationFinder } from './LocationFinder'
 import { RecommendationsList } from './RecommendationsList'
 import { CustomerSupport } from './CustomerSupport'
 import { findCheaperAlternatives } from '@/utils/priceComparison'
+import { UI_MESSAGES } from '@/constants/messages'
 
 interface Bill {
   id: string
@@ -84,6 +85,16 @@ export function Dashboard({ user, onSignOut }: DashboardProps) {
       loadRecommendations()
     }
   }, [user])
+
+  // Listen for bill updates from BillDetailsModal
+  useEffect(() => {
+    const handleBillUpdate = () => {
+      loadBills(); // Reload bills when updated
+    };
+    
+    window.addEventListener('billUpdated', handleBillUpdate);
+    return () => window.removeEventListener('billUpdated', handleBillUpdate);
+  }, [])
 
   const loadBills = async () => {
     setLoading(true)
@@ -276,7 +287,7 @@ export function Dashboard({ user, onSignOut }: DashboardProps) {
                             <TableHead>Service</TableHead>
                             <TableHead>Amount</TableHead>
                             <TableHead>Date</TableHead>
-                            <TableHead>Better Alternative</TableHead>
+                            <TableHead>{UI_MESSAGES.BETTER_ALTERNATIVE}</TableHead>
                             <TableHead className="text-right">Actions</TableHead>
                           </TableRow>
                         </TableHeader>
@@ -287,15 +298,24 @@ export function Dashboard({ user, onSignOut }: DashboardProps) {
                                <TableCell>{bill.service_type}</TableCell>
                                <TableCell>${bill.amount.toFixed(2)}</TableCell>
                                <TableCell>{new Date(bill.bill_date).toLocaleDateString()}</TableCell>
-                               <TableCell>
-                                 {billAlternatives[bill.id] ? (
-                                   <span>
-                                     {billAlternatives[bill.id]?.vendor}: ${billAlternatives[bill.id]?.price.toFixed(2)}
-                                   </span>
-                                 ) : (
-                                   <span className="text-muted-foreground text-sm">N/A</span>
-                                 )}
-                               </TableCell>
+                            <TableCell>
+                              {billAlternatives[bill.id] ? (
+                                <div className="flex items-center gap-2">
+                                  <span className="font-medium text-primary">{billAlternatives[bill.id]?.vendor}</span>
+                                  <span className="text-success">${billAlternatives[bill.id]?.price.toFixed(2)}</span>
+                                  <a 
+                                    href={`https://www.google.com/search?q=${encodeURIComponent(billAlternatives[bill.id]?.vendor || '')}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-primary hover:underline text-xs"
+                                  >
+                                    View
+                                  </a>
+                                </div>
+                              ) : (
+                                <span className="text-muted-foreground text-sm">{UI_MESSAGES.NO_ALTERNATIVE_AVAILABLE}</span>
+                              )}
+                            </TableCell>
                                <TableCell className="text-right">
                                  <div className="flex gap-2 justify-end">
                                    {bill.file_url && (

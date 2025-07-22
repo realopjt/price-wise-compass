@@ -162,6 +162,22 @@ export const findCheaperAlternatives = async (
   const userCountry = await getUserCountry();
   console.log(`Finding alternatives for ${productName} in country: ${userCountry}`);
   
+  // Check if this is a utility or unique provider service
+  const isUtility = /\b(electric|electricity|gas|natural gas|water|sewer|utility|utilities|power|energy|internet|broadband|cable|phone|mobile|cellular|wireless|telecom|telecommunications|CUC|Caribbean Utilities|Flow|Digicel|Logic)\b/gi.test(productName);
+  const isUniqueProvider = /\b(CUC|Caribbean Utilities|government|municipal|city hall|county|state|federal|postal|dmv|license|permit|registration)\b/gi.test(productName);
+  
+  // For utilities and unique providers, return "No alternative available"
+  if (isUtility || isUniqueProvider) {
+    console.log(`No alternatives available for utility/unique provider: ${productName}`);
+    return {
+      productName,
+      currentPrice,
+      alternatives: [], // Empty alternatives array
+      userCountry,
+      globalAlternatives: undefined
+    };
+  }
+  
   const localStores = getLocalSupermarkets(userCountry);
   const globalStores = includeGlobal ? getGlobalSupermarkets() : [];
   const allStores = [...localStores, ...globalStores];
