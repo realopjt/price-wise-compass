@@ -96,35 +96,54 @@ export function BillDetailsModal({ bill, open, onOpenChange }: BillDetailsModalP
 
   const handleSaveEdits = async () => {
     setSavingEdit(true)
-    const { error } = await supabase
-      .from('bills')
-      .update({
-        company_name: editData.company_name,
-        service_type: editData.service_type,
-        amount: editData.amount,
-        bill_date: editData.bill_date
-      })
-      .eq('id', bill.id)
+    try {
+      const { error } = await supabase
+        .from('bills')
+        .update({
+          company_name: editData.company_name,
+          service_type: editData.service_type,
+          amount: editData.amount,
+          bill_date: editData.bill_date
+        })
+        .eq('id', bill.id)
 
-    if (error) {
+      if (error) {
+        toast({
+          title: 'Error updating bill',
+          description: error.message,
+          variant: 'destructive'
+        })
+      } else {
+        // Update local copy so UI reflects changes immediately
+        bill.company_name = editData.company_name
+        bill.service_type = editData.service_type
+        bill.amount = editData.amount
+        bill.bill_date = editData.bill_date
+        
+        toast({
+          title: 'Bill updated',
+          description: 'The bill details have been updated successfully.'
+        })
+        setEditMode(false)
+        
+        // Trigger a page refresh to ensure the parent Dashboard component sees the changes
+        setTimeout(() => {
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('billUpdated', { 
+              detail: { billId: bill.id, updatedBill: bill } 
+            }));
+          }
+        }, 100);
+      }
+    } catch (error: any) {
       toast({
         title: 'Error updating bill',
-        description: error.message,
+        description: error.message || 'An unexpected error occurred',
         variant: 'destructive'
       })
-    } else {
-      // update local copy so UI reflects changes immediately
-      bill.company_name = editData.company_name
-      bill.service_type = editData.service_type
-      bill.amount = editData.amount
-      bill.bill_date = editData.bill_date
-      toast({
-        title: 'Bill updated',
-        description: 'The bill details have been updated successfully.'
-      })
-      setEditMode(false)
+    } finally {
+      setSavingEdit(false)
     }
-    setSavingEdit(false)
   }
 
   const getStatusIcon = (status: string) => {

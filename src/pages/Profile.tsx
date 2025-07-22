@@ -127,13 +127,36 @@ const Profile = () => {
     try {
       setUploading(true);
       
+      // Show progress toast
+      toast({
+        title: "Uploading avatar...",
+        description: "Please wait while we upload your profile picture.",
+      });
+      
       const fileExt = file.name.split('.').pop();
-      const fileName = `${user.id}-${Math.random()}.${fileExt}`;
+      const fileName = `${user.id}-${Date.now()}.${fileExt}`;
       const filePath = `avatars/${fileName}`;
+
+      // Remove old avatar if exists to avoid storage bloat
+      if (profile?.avatar_url) {
+        try {
+          const oldFileName = profile.avatar_url.split('/').pop();
+          if (oldFileName) {
+            await supabase.storage
+              .from('avatars')
+              .remove([`avatars/${oldFileName}`]);
+          }
+        } catch (error) {
+          console.log('Could not remove old avatar:', error);
+        }
+      }
 
       const { error: uploadError } = await supabase.storage
         .from('avatars')
-        .upload(filePath, file);
+        .upload(filePath, file, { 
+          cacheControl: '3600',
+          upsert: false 
+        });
 
       if (uploadError) {
         throw uploadError;
@@ -143,7 +166,20 @@ const Profile = () => {
         .from('avatars')
         .getPublicUrl(filePath);
 
-      return data.publicUrl;
+      // Ensure the URL is valid and accessible
+      const avatarUrl = data.publicUrl;
+      
+      // Verify the upload worked by trying to fetch the image
+      try {
+        const response = await fetch(avatarUrl);
+        if (!response.ok) {
+          throw new Error('Avatar upload verification failed');
+        }
+      } catch (error) {
+        console.warn('Avatar verification failed, but continuing:', error);
+      }
+
+      return avatarUrl;
     } catch (error) {
       console.error('Error uploading avatar:', error);
       toast({
@@ -180,7 +216,7 @@ const Profile = () => {
 
       if (error) throw error;
 
-      // Update local state
+      // Update local state immediately
       setProfile(prev => prev ? {
         ...prev,
         full_name: fullName || null,
@@ -188,6 +224,11 @@ const Profile = () => {
       } : null);
 
       setAvatarFile(null);
+      
+      // Force a re-fetch of the profile to ensure consistency
+      setTimeout(() => {
+        fetchProfile();
+      }, 1000);
       
       toast({
         title: "Profile updated",

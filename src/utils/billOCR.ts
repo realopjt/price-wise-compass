@@ -455,17 +455,27 @@ export const parseBillData = (extractedText: string): ExtractedBillData => {
       }
     }
 
-    // Try pattern-based extraction for other companies
+    // Try pattern-based extraction for other companies with enhanced address filtering
     for (const pattern of COMPANY_NAME_PATTERNS) {
       const matches = [...originalText.matchAll(pattern)];
       for (const match of matches) {
         const candidate = match[1]?.trim();
         if (candidate && candidate.length >= 3 && candidate.length <= 50) {
-          // Validate candidate (exclude common false positives)
-          if (!/^\d+$/.test(candidate) && // Not just numbers
-              !/(date|time|phone|fax|email|total|amount|tax|due)/i.test(candidate) && // Not bill terms
-              !/^(page|of|the|and|or|to|from|for|with|by)$/i.test(candidate)) { // Not common words
-            
+          // Enhanced validation to exclude address lines and common false positives
+          const isInvalidCandidate = (
+            /^\d+$/.test(candidate) || // Not just numbers
+            /(date|time|phone|fax|email|total|amount|tax|due)/i.test(candidate) || // Not bill terms
+            /^(page|of|the|and|or|to|from|for|with|by)$/i.test(candidate) || // Not common words
+            // Enhanced address line detection
+            /\b\d+\s+\w+\s+(street|st|avenue|ave|road|rd|drive|dr|lane|ln|boulevard|blvd|circle|cir|court|ct|place|pl)\b/i.test(candidate) || // Street addresses
+            /\b(po\s*box|p\.o\.\s*box|\bbox\b)\s*\d+/i.test(candidate) || // PO Box
+            /\b\d{5}(-\d{4})?\b/.test(candidate) || // ZIP codes
+            /\b(suite|ste|apt|apartment|unit)\s*\d+/i.test(candidate) || // Suite/Apt numbers
+            /^\d+\s+\w+$/i.test(candidate) || // Simple "123 Main" patterns
+            candidate.includes(',') && /\b(city|state|province)\b/i.test(candidate) // City, State patterns
+          );
+          
+          if (!isInvalidCandidate) {
             companyName = candidate;
             nameConfidence = 0.6;
             break;
